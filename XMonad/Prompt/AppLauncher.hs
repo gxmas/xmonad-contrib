@@ -15,12 +15,13 @@
 module XMonad.Prompt.AppLauncher ( -- * Usage
                                     -- $usage
                                     launchApp
+                                   ,launchApp'
                                    ,module XMonad.Prompt
                                   -- * Use case: launching gimp with file
                                   -- $tip
 
                                   -- * Types
-                                   ,Application, AppPrompt,
+                                   ,Application, AppPrompt, Parameters
                                   ) where
 
 import XMonad (X(),MonadIO)
@@ -65,11 +66,16 @@ type Application = String
 type Parameters = String
 
 {- | Given an application and its parameters, launch the application. -}
-launch :: MonadIO m => Application -> Parameters -> m ()
-launch app params = spawn ( app ++ " " ++ params )
+launch :: MonadIO m => (Parameters -> Parameters) -> Application -> Parameters -> m ()
+launch k app params = spawn ( app ++ " " ++ k params )
 
 
 {- | Get the user's response to a prompt an launch an application using the
    input as command parameters of the application.-}
 launchApp :: XPConfig -> Application -> X ()
-launchApp config app = mkXPrompt (AppPrompt app) config (getShellCompl [] $ searchPredicate config) $ launch app
+launchApp config app = launchApp' config app id
+
+{- | Get the user's response to a prompt an launch an application using the
+   input as command parameters of the application.-}
+launchApp' :: XPConfig -> Application -> (Parameters -> Parameters) -> X ()
+launchApp' config app k = mkXPrompt (AppPrompt app) config (getShellCompl [] $ searchPredicate config) $ launch k app
